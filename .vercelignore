@@ -1,0 +1,12 @@
+# Vercel uploads the source and builds it in its own environment, so nothing
+# generated locally needs to travel with it.
+node_modules
+dist
+dist-ssr
+
+# Source photography: ~20 MB of originals. Only the optimized derivatives in
+# public/images are committed, and they are all the deploy needs.
+assets-src
+
+.vercel
+*.log

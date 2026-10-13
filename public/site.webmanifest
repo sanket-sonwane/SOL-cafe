@@ -1,0 +1,33 @@
+{
+  "id": "/",
+  "name": "SŌL — Coffee & Slow Living",
+  "short_name": "SŌL",
+  "description": "A neighbourhood specialty café: thoughtfully brewed coffee, beautiful things to eat, and a space to stay a little longer.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "lang": "en-IN",
+  "dir": "ltr",
+  "background_color": "#F5EFE5",
+  "theme_color": "#30231D",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

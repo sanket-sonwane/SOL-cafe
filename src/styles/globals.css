@@ -1,0 +1,396 @@
+/* ---------------------------------------------------------------------------
+   SŌL — typeface loading.
+   Self-hosted via @fontsource so there are no third-party font requests,
+   no render-blocking external CSS and no licensing ambiguity.
+
+   Only the weights the design actually uses are loaded:
+     Cormorant Garamond  300 / 400 / 500  + 300 & 400 italic  (display serif)
+     DM Sans             400 / 500                            (body + UI)
+   --------------------------------------------------------------------------- */
+@import "@fontsource/cormorant-garamond/300.css";
+@import "@fontsource/cormorant-garamond/400.css";
+@import "@fontsource/cormorant-garamond/500.css";
+@import "@fontsource/cormorant-garamond/300-italic.css";
+@import "@fontsource/cormorant-garamond/400-italic.css";
+@import "@fontsource/dm-sans/400.css";
+@import "@fontsource/dm-sans/500.css";
+
+@import "tailwindcss";
+
+@import "./typography.css";
+@import "./motion.css";
+
+/* ---------------------------------------------------------------------------
+   Design tokens  (Tailwind v4 CSS-first configuration)
+   Sample values from PRD §11.1, extended with two derived surfaces.
+   --------------------------------------------------------------------------- */
+@theme {
+  /* Palette ------------------------------------------------------------- */
+  --color-espresso: #30231d;
+  --color-ink: #1c1512;
+  --color-ivory: #f5efe5;
+  --color-cream: #fbf8f2;
+  --color-sand: #e9e0d3;
+  --color-taupe: #d8ccbe;
+  --color-coffee: #5c3d2b;
+  --color-olive: #6a6b50;
+  --color-terracotta: #b86f52;
+  /* Terminals darkened for text use: the PRD notes the palette samples are
+     starting points to be tested for contrast, and terracotta on a light surface
+     only reaches ~3.4:1 — fine for a border, icon or rule, not for prose. */
+  --color-terracotta-deep: #96432a;
+  --color-clay: #a98e77;
+
+  /* Typefaces ----------------------------------------------------------- */
+  --font-display: "Cormorant Garamond", "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  /* Fluid type scale ----------------------------------------------------- */
+  --text-micro: 0.6875rem;
+  --text-micro--line-height: 1.2;
+  --text-micro--letter-spacing: 0.16em;
+
+  --text-eyebrow: 0.75rem;
+  --text-eyebrow--line-height: 1.2;
+  --text-eyebrow--letter-spacing: 0.22em;
+
+  --text-caption: 0.8125rem;
+  --text-caption--line-height: 1.5;
+
+  --text-display-1: clamp(3.25rem, 12.5vw, 12rem);
+  --text-display-1--line-height: 0.86;
+  --text-display-1--letter-spacing: -0.035em;
+
+  --text-display-2: clamp(2.75rem, 8.2vw, 7.5rem);
+  --text-display-2--line-height: 0.9;
+  --text-display-2--letter-spacing: -0.028em;
+
+  --text-display-3: clamp(2.25rem, 5.6vw, 4.75rem);
+  --text-display-3--line-height: 0.96;
+  --text-display-3--letter-spacing: -0.02em;
+
+  --text-title: clamp(1.625rem, 3.4vw, 2.875rem);
+  --text-title--line-height: 1.05;
+  --text-title--letter-spacing: -0.015em;
+
+  /* Motion -------------------------------------------------------------- */
+  --ease-sol: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-sol-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* Layout -------------------------------------------------------------- */
+  --container-sol: 90rem;
+}
+
+/* ---------------------------------------------------------------------------
+   The solar arc — time-of-day surfaces
+
+   SŌL means sun, so the page is a single day. Each section declares the hour it
+   sits at (`data-hour`), and that hour supplies the light: a base tone and a
+   directional wash, as if the sun were somewhere specific in the sky.
+
+   This is a *system*, not a set of accents (PRD §11.1): every surface is the same
+   warm family, and only the temperature and the direction of the light change.
+   Light hours stay high-luminance so espresso text keeps its contrast; dark hours
+   stay low-luminance for ivory text. The washes are deliberately gentle (≤ 40%
+   alpha over the base) so text contrast is never dependent on where in the
+   gradient it happens to land — every translucent text tone used on a surface is
+   verified against the *worst* corner of that surface's wash, not its average.
+   --------------------------------------------------------------------------- */
+
+@layer components {
+  [data-hour] {
+    background-color: var(--hour-base, var(--color-ivory));
+    background-image: var(--hour-wash, none);
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+  }
+
+  /* Dawn — the hero. Deep, cool at the top with the sun just below the horizon.
+     The washes stay restrained so ivory body copy keeps its contrast even in the
+     warmest corner of the gradient. */
+  [data-hour="dawn"] {
+    --hour-base: #191311;
+    --hour-wash:
+      radial-gradient(115% 85% at 14% 104%, rgba(222, 141, 84, 0.26), transparent 58%),
+      linear-gradient(180deg, rgba(34, 44, 66, 0.4), transparent 52%);
+  }
+
+  /* Morning — first real light, low and golden from the left. */
+  [data-hour="morning"] {
+    --hour-base: #fcf6ea;
+    --hour-wash: linear-gradient(112deg, rgba(255, 227, 178, 0.32), transparent 56%);
+  }
+
+  /* Noon — the brightest, flattest light of the day. */
+  [data-hour="noon"] {
+    --hour-base: #fefcf6;
+    --hour-wash:
+      linear-gradient(180deg, rgba(255, 247, 226, 0.4), transparent 68%),
+      radial-gradient(70% 55% at 50% -12%, rgba(255, 236, 196, 0.3), transparent 70%);
+  }
+
+  /* Afternoon — the light begins to lean again. */
+  [data-hour="afternoon"] {
+    --hour-base: #fcf7ec;
+    --hour-wash: linear-gradient(205deg, rgba(255, 216, 156, 0.24), transparent 62%);
+  }
+
+  /* Golden — the sun drops low; long, warm light from the lower right. */
+  [data-hour="golden"] {
+    --hour-base: #f9eede;
+    --hour-wash:
+      linear-gradient(302deg, rgba(226, 138, 72, 0.24), transparent 60%),
+      radial-gradient(80% 60% at 88% 108%, rgba(238, 166, 96, 0.2), transparent 62%);
+  }
+
+  /* Dusk — warm light fading into rose; the last of the day. */
+  [data-hour="dusk"] {
+    --hour-base: #f7e9de;
+    --hour-wash:
+      linear-gradient(282deg, rgba(176, 104, 88, 0.16), transparent 58%),
+      linear-gradient(180deg, rgba(120, 96, 120, 0.1), transparent 60%);
+  }
+
+  /* Evening — lights on inside, deep warmth outside. */
+  [data-hour="evening"] {
+    --hour-base: #241a15;
+    --hour-wash:
+      radial-gradient(90% 70% at 18% 8%, rgba(216, 152, 96, 0.24), transparent 60%),
+      linear-gradient(180deg, rgba(20, 16, 22, 0.5), transparent 70%);
+  }
+
+  /* Night — the deepest the page goes before the footer. */
+  [data-hour="night"] {
+    --hour-base: #17110e;
+    --hour-wash:
+      radial-gradient(80% 60% at 78% 0%, rgba(198, 140, 92, 0.16), transparent 62%),
+      radial-gradient(60% 50% at 10% 100%, rgba(110, 104, 140, 0.12), transparent 60%);
+  }
+
+  /* Deep night — the footer. Almost black, with a faint scatter of warmth. */
+  [data-hour="deep-night"] {
+    --hour-base: #0f0b09;
+    --hour-wash: radial-gradient(70% 45% at 50% -6%, rgba(190, 132, 86, 0.14), transparent 66%);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Base
+   --------------------------------------------------------------------------- */
+@layer base {
+  html {
+    /* The interface is light-only by design. Declaring it also fixes the colour
+       of form controls, scrollbars and the canvas under a dark OS preference. */
+    color-scheme: light;
+    /* Reserve the scrollbar track so locking scrolling for an overlay cannot
+       shift the layout sideways when the scrollbar disappears. */
+    scrollbar-gutter: stable;
+    -webkit-text-size-adjust: 100%;
+    /* Android Chrome (and mobile browsers generally) flash a default highlight
+       over a tapped target. Tinting it to the palette's terracotta keeps the
+       feedback that touch needs — hover states are meaningless here — while
+       making it read as part of the design. */
+    -webkit-tap-highlight-color: rgba(184, 111, 82, 0.18);
+    /* Anchor targets must clear the fixed header *and* any display cutout, so
+       the safe-area inset is folded into the offset the design already used. */
+    scroll-padding-top: calc(5.5rem + env(safe-area-inset-top));
+  }
+
+  /* Native smooth scrolling only when the visitor has not asked for less. */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-ivory);
+    color: var(--color-espresso);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.65;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    /* Horizontal overflow guard. `clip` is used rather than `hidden` because
+       `hidden` turns the body into a scroll container, which interferes with
+       position:fixed pinning (GSAP ScrollTrigger). The `hidden` fallback is
+       retained only for browsers without `overflow: clip`. */
+    overflow-x: hidden;
+  }
+
+  @supports (overflow: clip) {
+    body {
+      overflow-x: clip;
+    }
+  }
+
+  /* The scroll lock applied while an overlay (nav / lightbox / dialog) is open.
+     Applied to the root element: it is the scrolling element in a standards-mode
+     document, so locking only the body leaves the page scrollable behind the
+     overlay. */
+  html[data-scroll-locked="true"],
+  body[data-scroll-locked="true"] {
+    overflow: hidden;
+  }
+
+  ::selection {
+    background-color: var(--color-terracotta);
+    color: var(--color-cream);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-terracotta);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  /* Dark surfaces need a lighter focus ring to stay visible. */
+  .on-dark :focus-visible,
+  [data-surface="dark"] :focus-visible {
+    outline-color: var(--color-ivory);
+  }
+
+  /* Touch press feedback.
+
+     On a touch device there is no hover, so a tap can otherwise feel inert —
+     especially for the many links whose only affordance is a hover underline.
+     This fires only where hovering is unavailable, so a desktop click never
+     double-applies it on top of the existing `:hover` treatment. */
+  @media (hover: none) {
+    a:active,
+    button:active,
+    [role="button"]:active,
+    summary:active {
+      opacity: 0.72;
+    }
+  }
+
+  img,
+  video {
+    display: block;
+    max-width: 100%;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+
+  /* Deliberate, unobtrusive scrollbar so the editorial composition is not broken. */
+  @supports (scrollbar-width: thin) {
+    html {
+      scrollbar-width: thin;
+      scrollbar-color: var(--color-taupe) transparent;
+    }
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Shared composition utilities
+   --------------------------------------------------------------------------- */
+@utility container-sol {
+  width: 100%;
+  max-width: var(--container-sol);
+  margin-inline: auto;
+  /* `max()` folds in the safe-area insets, so in landscape — where a display
+     cutout can sit over the left or right edge — content is nudged clear of it.
+     In portrait (and on every non-notched device) the inset is 0, so the value
+     is exactly the design's own gutter. */
+  padding-inline: max(1.25rem, env(safe-area-inset-left)) max(1.25rem, env(safe-area-inset-right));
+
+  @media (width >= 48rem) {
+    padding-inline: max(2.5rem, env(safe-area-inset-left)) max(2.5rem, env(safe-area-inset-right));
+  }
+
+  @media (width >= 80rem) {
+    padding-inline: max(4rem, env(safe-area-inset-left)) max(4rem, env(safe-area-inset-right));
+  }
+}
+
+/* A thin editorial rule used between sections and inside the header. */
+@utility rule {
+  height: 1px;
+  width: 100%;
+  background-color: color-mix(in oklab, var(--color-taupe) 70%, transparent);
+}
+
+/* Vertical rhythm for the major sections. */
+@utility section-y {
+  padding-block: clamp(4.5rem, 10vw, 9.5rem);
+}
+
+@utility measure {
+  max-width: 34rem;
+}
+
+@utility measure-wide {
+  max-width: 46rem;
+}
+
+/* Hairline borders that stay crisp on high-DPI displays. */
+@utility hairline-t {
+  border-top: 1px solid color-mix(in oklab, var(--color-taupe) 75%, transparent);
+}
+
+@utility hairline-b {
+  border-bottom: 1px solid color-mix(in oklab, var(--color-taupe) 75%, transparent);
+}
+
+/* A very subtle paper grain, used sparingly on large flat surfaces. */
+@utility grain {
+  position: relative;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.5;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.14'/%3E%3C/svg%3E");
+  }
+}
+
+/* A horizontally scrollable strip (filters) that hides its scrollbar without
+   removing the ability to scroll it. */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Screen-reader-only, but focusable when it is a skip link. */
+@utility sr-only-focusable {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border-width: 0;
+
+  &:focus-visible {
+    position: fixed;
+    top: calc(1rem + env(safe-area-inset-top));
+    left: max(1rem, env(safe-area-inset-left));
+    z-index: 200;
+    width: auto;
+    height: auto;
+    margin: 0;
+    padding: 0.75rem 1.25rem;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+  }
+}

@@ -1,0 +1,89 @@
+/* ---------------------------------------------------------------------------
+   SŌL — typography layer
+   Display type is treated as a composition; UI type stays deliberately plain.
+   (PRD §7.4)
+   --------------------------------------------------------------------------- */
+
+/* Text is set on a tight optical rhythm for large sizes and a comfortable
+   rhythm for reading sizes. These helpers only handle the optical details that
+   are awkward to express with utilities. */
+@layer components {
+  .font-display {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-optical-sizing: auto;
+  }
+
+  .display-balance {
+    text-wrap: balance;
+  }
+
+  /* Deliberate line breaks in display headings: a <br> is honoured on wide
+     screens and collapses into natural wrapping on narrow ones. */
+  .display-break br {
+    display: none;
+  }
+
+  @media (width >= 48rem) {
+    .display-break br {
+      display: initial;
+    }
+  }
+
+  /* Editorial italic used as a compositional accent, not for whole paragraphs. */
+  .accent-italic {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 400;
+  }
+
+  /* Numerals in prices, hours and party sizes must never be ambiguous. */
+  .numeric {
+    font-variant-numeric: tabular-nums lining-nums;
+    font-feature-settings: "tnum" 1, "lnum" 1;
+    letter-spacing: 0.01em;
+  }
+
+  /* Animated inline link underline (Tier 1 motion). */
+  .link-underline {
+    position: relative;
+    display: inline-block;
+    text-decoration: none;
+  }
+
+  .link-underline::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -0.15em;
+    height: 1px;
+    width: 100%;
+    background-color: currentColor;
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 320ms var(--ease-sol);
+  }
+
+  .link-underline:hover::after,
+  .link-underline:focus-visible::after {
+    transform: scaleX(1);
+  }
+
+  /* The same idea, but underlined at rest and dismissed on hover — used for
+     navigation where the underline communicates the active state. */
+  .link-rest::after {
+    transform: scaleX(1);
+    opacity: 0.35;
+  }
+
+  .link-rest:hover::after,
+  .link-rest:focus-visible::after {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .link-underline::after {
+    transition: none;
+  }
+}

@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <title>SŌL — Coffee &amp; Slow Living | Specialty Café in Kalyani Nagar, Pune</title>
+    <meta
+      name="description"
+      content="SŌL is a neighbourhood specialty café in Kalyani Nagar, Pune. Thoughtfully brewed coffee, beautiful things to eat, and a space to stay a little longer. A little slower. A little better."
+    />
+    <meta name="theme-color" content="#30231D" />
+    <!--
+      Light only, deliberately. The design is a warm ivory page with espresso text;
+      advertising `light dark` would let the browser render form controls, scrollbars
+      and the canvas dark under a dark OS preference, which reads as a broken page.
+    -->
+    <meta name="color-scheme" content="light" />
+    <link rel="canonical" href="https://sol-cafe.example/" />
+
+    <!-- Social sharing -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="SŌL — Coffee & Slow Living" />
+    <meta property="og:title" content="SŌL — Coffee & Slow Living" />
+    <meta
+      property="og:description"
+      content="Thoughtfully brewed coffee, beautiful things to eat, and a space to stay a little longer. Kalyani Nagar, Pune."
+    />
+    <meta property="og:url" content="https://sol-cafe.example/" />
+    <!-- Absolute URLs: several crawlers discard relative og:image values. -->
+    <meta property="og:image" content="https://sol-cafe.example/og-image.webp" />
+    <meta property="og:image:type" content="image/webp" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="A ceramic cup of coffee on a warm wooden café table" />
+    <meta property="og:locale" content="en_IN" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="SŌL — Coffee & Slow Living" />
+    <meta
+      name="twitter:description"
+      content="Thoughtfully brewed coffee, beautiful things to eat, and a space to stay a little longer. Kalyani Nagar, Pune."
+    />
+    <meta name="twitter:image" content="https://sol-cafe.example/og-image.webp" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- Preload the hero image: it is the LCP element and must not be lazy-loaded. -->
+    <link rel="preload" as="image" href="/images/hero/hero-primary-1600.webp" fetchpriority="high" />
+
+    <!--
+      Reveal-system boot flag.
+
+      Scroll reveals are pure CSS (src/styles/motion.css). Elements that opt in are
+      hidden *only* when this script has run, so if JavaScript is disabled or the
+      bundle fails to load, every section is visible immediately and nothing is
+      ever trapped behind an animation.
+
+      It is inline, and runs before first paint, so there is no flash of
+      visible-then-hidden content. No Content-Security-Policy is shipped by this
+      project; if one is added, this script needs a matching hash or nonce. That is
+      documented in README.md.
+    -->
+    <script>
+      document.documentElement.classList.add("js");
+    </script>
+  </head>
+  <body>
+    <div id="root"><!--app-html--></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

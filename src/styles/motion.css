@@ -1,0 +1,386 @@
+/* ---------------------------------------------------------------------------
+   SŌL — motion layer
+   Motion ownership (PRD §7.5): Motion for React owns entrances/hover/in-view;
+   GSAP ScrollTrigger owns only the pinned story scene; the marquee and the
+   intro safety animations are pure CSS so they never depend on JS timing.
+   --------------------------------------------------------------------------- */
+
+/* --- Keyframes ------------------------------------------------------------ */
+
+@keyframes sol-marquee {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    /* The track is rendered twice, so -50% produces a seamless loop. */
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes sol-scroll-cue {
+  0% {
+    transform: scaleY(0);
+    transform-origin: top center;
+    opacity: 0;
+  }
+  35% {
+    transform: scaleY(1);
+    transform-origin: top center;
+    opacity: 1;
+  }
+  65% {
+    transform: scaleY(1);
+    transform-origin: bottom center;
+    opacity: 1;
+  }
+  100% {
+    transform: scaleY(0);
+    transform-origin: bottom center;
+    opacity: 0;
+  }
+}
+
+/* The sun's corona, used on the solar progress indicator. */
+@keyframes sol-flare {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.08);
+  }
+}
+
+/* The hero sun's slow drift — an autonomous, very slow breath of light. */
+@keyframes sol-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.55;
+  }
+  50% {
+    transform: translate3d(2%, -2.5%, 0) scale(1.05);
+    opacity: 0.75;
+  }
+}
+
+.sun-disc {
+  animation: sol-drift 22s var(--ease-sol-in-out) infinite;
+}
+
+/* The sun discs are decorated with a large `blur()` (46–54px). On a phone that
+   is a genuinely expensive filter to re-composite every frame, for an effect
+   that is pure soft light. A shorter radius is visually equivalent at phone
+   size and much cheaper for a mid-range Android GPU. Unlayered, so it
+   deliberately out-ranks the per-instance Tailwind `blur-[…]` utility. */
+@media (width < 48rem) {
+  .sun-disc {
+    filter: blur(26px);
+  }
+}
+
+/* --- Marquee strip -------------------------------------------------------- */
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: sol-marquee var(--marquee-duration, 34s) linear infinite;
+  will-change: transform;
+}
+
+/* Reading should never be disturbed: pause while the visitor is interacting. */
+.marquee:hover .marquee-track,
+.marquee:focus-within .marquee-track {
+  animation-play-state: paused;
+}
+
+/* --- Scroll cue ----------------------------------------------------------- */
+
+.scroll-cue-line {
+  animation: sol-scroll-cue 2.6s var(--ease-sol-in-out) infinite;
+}
+
+/* --- Overflow mask used by the text reveal containers --------------------- */
+
+/* The clip container; the inner element is translated by the reveal system.
+   The padding/negative-margin pair gives descenders (p, y, g) room inside the
+   clip box without changing the line's occupied height, so a word is revealed
+   cleanly rather than having its tail shaved off. */
+.mask-line {
+  overflow: hidden;
+  display: block;
+  padding-bottom: 0.16em;
+  margin-bottom: -0.16em;
+}
+
+/* --- Scroll reveal system -------------------------------------------------
+
+   Content is rendered visible by default. The `js` class is added by a tiny
+   boot script in index.html before first paint, so if JavaScript is disabled —
+   or the bundle fails to load — nothing is ever hidden. (PRD FR-02, FR-03)
+
+   Individual elements opt in with `data-reveal`; the IntersectionObserver in
+   hooks/useReveal.ts flips `data-revealed` to "true".
+   --------------------------------------------------------------------------- */
+
+html.js [data-reveal] {
+  opacity: 0;
+  transform: translate3d(0, var(--reveal-y, 1.5rem), 0);
+}
+
+html.js [data-reveal][data-revealed="true"] {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity var(--reveal-duration, 0.75s) var(--ease-sol) var(--reveal-delay, 0s),
+    transform var(--reveal-duration, 0.9s) var(--ease-sol) var(--reveal-delay, 0s);
+}
+
+/* A slightly larger travel for a more deliberate editorial entrance. */
+[data-reveal-distance="lg"] {
+  --reveal-y: 3rem;
+}
+
+[data-reveal-distance="sm"] {
+  --reveal-y: 0.75rem;
+}
+
+/* --- Masked line groups ----------------------------------------------------
+   One observer per heading; the lines stagger themselves through a per-line
+   `--line-delay`. Keeps the number of IntersectionObservers independent of the
+   number of headline lines.
+   --------------------------------------------------------------------------- */
+
+html.js [data-reveal-lines] .mask-line > * {
+  transform: translate3d(0, 130%, 0);
+}
+
+html.js [data-reveal-lines][data-revealed="true"] .mask-line > * {
+  transform: none;
+  transition: transform var(--reveal-duration, 0.95s) var(--ease-sol) var(--line-delay, 0s);
+}
+
+/* --- Reduced motion ------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+    /* Without the animation the duplicated track is meaningless. */
+    transform: none;
+  }
+
+  .scroll-cue-line {
+    animation: none;
+    transform: scaleY(1);
+    opacity: 0.6;
+  }
+
+  /* Reveals resolve to their final state with no motion. The content is never
+     hidden — only the movement is removed. (PRD §12.2) */
+  html.js [data-reveal],
+  html.js [data-reveal-lines] .mask-line > * {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  /* GSAP is never initialised under reduced motion, but belt and braces:
+     clear any inline transforms if a stylesheet race occurs. */
+  [data-gsap-scene] * {
+    transform: none !important;
+  }
+
+  /* The moving light is a decorative wash; at rest it is simply absent. */
+  .light-sweep {
+    opacity: 0;
+  }
+
+  /* The hero sun holds still. */
+  .sun-disc {
+    animation: none;
+  }
+}
+
+/* --- Image aperture reveal (PRD Animation B) -------------------------------
+
+   A photograph is concealed by a mask that opens as it enters the viewport,
+   while the image itself settles from a slight over-scale. The mask is a
+   clip-path rather than an animated container height, so the layout never
+   changes and no reflow is triggered.
+
+   The element is *revealed*, not hidden, when `data-revealed` is absent: with
+   JavaScript unavailable the image is simply shown at full size.
+   --------------------------------------------------------------------------- */
+
+html.js [data-aperture] .aperture-media {
+  clip-path: inset(var(--aperture-inset, 14% 12%));
+  transform: scale(var(--aperture-scale, 1.12));
+}
+
+html.js [data-aperture][data-revealed="true"] .aperture-media {
+  clip-path: inset(0% 0% 0% 0%);
+  transform: scale(1);
+  transition:
+    clip-path var(--aperture-duration, 1.1s) var(--ease-sol) var(--aperture-delay, 0s),
+    transform calc(var(--aperture-duration, 1.1s) * 1.6) var(--ease-sol) var(--aperture-delay, 0s);
+}
+
+/* Directional variants, so adjacent images never open the same way twice. */
+[data-aperture="up"] {
+  --aperture-inset: 100% 0% 0% 0%;
+}
+[data-aperture="down"] {
+  --aperture-inset: 0% 0% 100% 0%;
+}
+[data-aperture="left"] {
+  --aperture-inset: 0% 0% 0% 100%;
+}
+[data-aperture="right"] {
+  --aperture-inset: 0% 100% 0% 0%;
+}
+
+/* --- Kinetic words (PRD Animation A) ---------------------------------------
+
+   The hero headline enters word by word: each word sits in its own clipping
+   container and rises out of it. Because the container is `overflow: hidden`,
+   the reveal is a clean mask rather than a fade.
+   --------------------------------------------------------------------------- */
+
+.kinetic-word {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  /* Descenders (y, p, g) must not be clipped by the mask. */
+  padding-bottom: 0.16em;
+  margin-bottom: -0.16em;
+}
+
+html.js [data-kinetic] .kinetic-word > * {
+  display: inline-block;
+  transform: translate3d(0, 130%, 0);
+}
+
+html.js [data-kinetic][data-revealed="true"] .kinetic-word > * {
+  transform: none;
+  transition: transform var(--kinetic-duration, 1s) var(--ease-sol) var(--word-delay, 0s);
+}
+
+/* --- Moving light ----------------------------------------------------------
+
+   Decorative light that drifts across a surface as it passes through the
+   viewport, so a still frame never looks like a flat fill. Driven by a single
+   scroll-linked custom property written by the SolarLight component.
+   --------------------------------------------------------------------------- */
+
+.light-sweep {
+  background: linear-gradient(
+    100deg,
+    transparent calc(var(--light-x, 50%) - 42%),
+    var(--light-color, rgba(255, 226, 178, 0.5)) var(--light-x, 50%),
+    transparent calc(var(--light-x, 50%) + 42%)
+  );
+  mix-blend-mode: soft-light;
+}
+
+/* --- Solar progress --------------------------------------------------------
+   The scroll indicator is a sun travelling along the top edge: it warms at
+   dawn, burns white at noon and cools to dusk, echoing the page's own arc.
+   --------------------------------------------------------------------------- */
+
+.solar-corona {
+  animation: sol-flare 3.6s var(--ease-sol-in-out) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .solar-corona {
+    animation: none;
+  }
+
+  /* The aperture and kinetic masks are introduced *below* the first
+     reduced-motion block in source order, and their `data-revealed` variants
+     out-specify it, so they are neutralised again here — last in the file, where
+     they reliably win. Without this the hero images would stay cropped under
+     reduced motion and their reveal would still animate on scroll. */
+  html.js [data-aperture] .aperture-media,
+  html.js [data-aperture][data-revealed="true"] .aperture-media {
+    clip-path: none !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  html.js [data-kinetic] .kinetic-word > *,
+  html.js [data-kinetic][data-revealed="true"] .kinetic-word > * {
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+/* --- Intro gate ------------------------------------------------------------
+
+   The opening title card covers the hero while it plays, so the hero's own
+   kinetic reveal must not run beneath it. While `data-intro="playing"` is set on
+   the root, the hero's kinetic words and its aperture are held at their start
+   state; removing the attribute on finish releases them as one gesture. If
+   JavaScript never runs, the attribute is never set and nothing is held.
+   --------------------------------------------------------------------------- */
+
+html.js[data-intro="playing"] [data-kinetic] .kinetic-word > * {
+  transform: translate3d(0, 130%, 0);
+  transition: none;
+}
+
+html.js[data-intro="playing"] [data-aperture] .aperture-media {
+  clip-path: inset(var(--aperture-inset, 14% 12%));
+  transform: scale(var(--aperture-scale, 1.12));
+  transition: none;
+}
+
+/* --- Café story: the pinned horizontal scene ------------------------------
+
+   The three chapters are ordinary, stacked, fully readable content by default —
+   that is what a mobile visitor, a reduced-motion visitor, and anyone whose
+   JavaScript fails will see.
+
+   Only when GSAP has taken ownership on a wide viewport does the same markup
+   become a pinned horizontal track. The panels deliberately contain no
+   interactive elements, so the pinned scene cannot trap keyboard focus or
+   prevent a keyboard user from reaching the content after it. (PRD §6.5)
+   --------------------------------------------------------------------------- */
+
+.story-track {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(3.5rem, 9vw, 7rem);
+}
+
+.story-progress {
+  display: none;
+}
+
+@media (min-width: 48rem) {
+  [data-gsap-scene][data-story-ready="true"] {
+    height: 100svh;
+    overflow: hidden;
+  }
+
+  [data-gsap-scene][data-story-ready="true"] .story-track {
+    flex-direction: row;
+    align-items: stretch;
+    height: 100%;
+    gap: 0;
+    will-change: transform;
+  }
+
+  [data-gsap-scene][data-story-ready="true"] .story-panel {
+    flex: 0 0 100%;
+    width: 100%;
+    min-width: 0;
+  }
+
+  [data-gsap-scene][data-story-ready="true"] .story-progress {
+    display: block;
+  }
+}
+

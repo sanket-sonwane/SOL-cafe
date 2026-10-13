@@ -1,0 +1,9 @@
+# SŌL — Coffee & Slow Living
+# Demonstration site content. The host below is swapped for the real origin at
+# build time from the VITE_SITE_URL environment variable (see scripts/site-url.mjs).
+
+User-agent: *
+Allow: /
+
+# No crawl directives that hide real content; everything here is public marketing copy.
+Sitemap: https://sol-cafe.example/sitemap.xml
